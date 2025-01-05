@@ -35,6 +35,6 @@ Make sure you have the following installed:
 
 1. Clone the repository:
    ```bash
-   git clone git clone https://github.com/your-username/audio-emotion-detection.git
+   git clone git clone https://github.com/PriyaKapgate/speech-emotion-recognition.git
 cd audio-emotion-detection
    cd audio-emotion-detection
