@@ -2,6 +2,10 @@
 
 This project is a Flask-based web application that records user audio, predicts the emotion expressed in the recording, and stores the data (including probabilities for each emotion) in an SQLite database. It uses **librosa** for feature extraction and a pre-trained machine learning model for emotion classification.
 
+## Application Interface
+
+![App Interface](app_interface.png)
+
 ---
 
 ## Features
