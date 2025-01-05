@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Emotion Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4ff;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #4a90e2;
+            width: 100%;
+            padding: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            color: #fff;
+        }
+
+        main {
+            margin-top: 80px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #4a90e2;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #555;
+        }
+
+        #recordBtn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        #recordBtn:hover {
+            background-color: #388e3c;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 100%;
+            overflow-wrap: break-word;
+        }
+
+        .detected-emotion {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        #emotionChart {
+            margin-top: 20px;
+            max-width: 100%;
+            height: 400px;
+        }
+
+        #recordingStatus {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #ff5722;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Audio Emotion Detection</h1>
+    </header>
+    <main>
+        <h2>What do you feel about this question?</h2>
+        <p>Question: "How was your day?"</p>
+        <button id="recordBtn"><i class="fas fa-microphone"></i> Record Audio</button>
+        <div id="recordingStatus"></div> <!-- Status display -->
+        <div id="result"></div>
+        <canvas id="emotionChart"></canvas>
+    </main>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        $(document).ready(function () {
+            $('#recordBtn').click(function () {
+                if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                    startRecording();
+                } else {
+                    stopRecording();
+                }
+            });
+        });
+
+        function startRecording() {
+            $('#recordingStatus').text("Recording...");
+            $('#recordBtn').text('Stop Recording');
+            $('#recordBtn').append('<i class="fas fa-stop"></i>');
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioChunks = [];
+
+                        // Simulating a backend call with dummy response
+                        simulateBackendCall(audioBlob);
+                    };
+                });
+        }
+
+        function stopRecording() {
+            $('#recordingStatus').text("Stopped.");
+            $('#recordBtn').text('Record Audio');
+            $('#recordBtn i').remove(); // Remove stop icon
+            mediaRecorder.stop();
+        }
+
+        function simulateBackendCall(audioBlob) {
+            // Simulate an AJAX request to a backend
+            setTimeout(() => {
+                const response = {
+                    emotion: 'neutral',
+                    spokenText: 'I had a good day.',
+                    probabilities: {
+                        angry: 0.00,
+                        calm: 5.22,
+                        disgust: 0.00,
+                        fearful: 0.25,
+                        happy: 0.02,
+                        neutral: 94.18,
+                        sad: 0.19,
+                        surprised: 0.13
+                    }
+                };
+
+                // Update result display
+                $('#result').html(`
+                    <h2 class="detected-emotion">Detected Emotion: ${response.emotion}</h2>
+                `);
+                // Draw the chart
+                drawChart(response.probabilities);
+            }, 1000); // Simulate network delay
+        }
+
+        function drawChart(probabilities) {
+            const ctx = document.getElementById('emotionChart').getContext('2d');
+            const labels = Object.keys(probabilities);
+            const data = Object.values(probabilities);
+
+            // Create chart
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Emotion Probability (%)',
+                        data: data,
+                        backgroundColor: 'rgba(74, 144, 226, 0.6)',
+                        borderColor: 'rgba(74, 144, 226, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Probability (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Emotions'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
